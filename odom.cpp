@@ -6,9 +6,7 @@
 
 // define the motors
 Encoders leftEncoder(LEFT_MOTOR_ENCODER_A, LEFT_MOTOR_ENCODER_B);
-L298N leftMotor(LEFT_MOTOR_ENABLE, LEFT_MOTOR_IN1, LEFT_MOTOR_IN2);
 Encoders rightEncoder(RIGHT_MOTOR_ENCODER_A, RIGHT_MOTOR_ENCODER_B);
-L298N rightMotor(RIGHT_MOTOR_ENABLE, RIGHT_MOTOR_IN1, RIGHT_MOTOR_IN2);
 
 // odometry global variables
 chassis::Position currentPosition;
@@ -23,7 +21,7 @@ double toRealDistance(int encoderTicks) {
          WHEEL_CIRCUMFERENCE;  // this gives us the distance traveled
 }
 
-void odom::doOdometryUpdateTick() {
+void chassis::doOdometryUpdateTick() {
   // calculate distance traveled by each wheel
   double leftDistance = toRealDistance(leftEncoder.getEncoderCount());
   double rightDistance = toRealDistance(rightEncoder.getEncoderCount());

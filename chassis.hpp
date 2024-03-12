@@ -16,4 +16,11 @@ void doOdometryUpdateTick();
  */
 Position getPosition();
 
+/**
+ * Moves the robot
+ */
+void move(int left, int right);
+
+void drive(double speed, double turn);
+
 }  // namespace chassis

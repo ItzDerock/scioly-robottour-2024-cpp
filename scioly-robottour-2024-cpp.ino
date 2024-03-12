@@ -20,5 +20,15 @@ void loop() {
   double deltaTime = millis() - lastTime;
   lastTime = millis();
 
-  delay(20);
+  // update odometry
+  chassis::doOdometryUpdateTick();
+
+  // move test
+  chassis::move(255, 255);
+  delay(1000);
+  chassis::move(-255, -255);
+  delay(1000);
+  chassis::move(0, 0);
+
+  delay(1000);
 }
