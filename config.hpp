@@ -16,4 +16,8 @@
 #define RIGHT_MOTOR_ENCODER_B 5
 
 #define WHEEL_CIRCUMFERENCE 20.42  // cm, d=65mm
-#define TRACK_WIDTH 17             // cm
+#define TRACK_WIDTH 11.3             // cm
+
+#include <semphr.h>
+extern SemaphoreHandle_t xSerialSemaphore; 
+

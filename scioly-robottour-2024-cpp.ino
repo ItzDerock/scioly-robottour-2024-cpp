@@ -6,29 +6,58 @@
  */
 
 #include <Arduino.h>
+#include <Arduino_FreeRTOS.h>
+#include <semphr.h>
 
 #include "PID.hpp"
 #include "chassis.hpp"
+#include "config.hpp"
 
-unsigned long lastTime = 0;
+SemaphoreHandle_t xSerialSemaphore = NULL;
 
-void setup() { Serial.begin(9600); }
+void autonomous();
 
-int i = 0;
-void loop() {
-  // in milliseconds
-  double deltaTime = millis() - lastTime;
-  lastTime = millis();
+void setup() { 
+  Serial.begin(9600);
 
-  // update odometry
-  chassis::doOdometryUpdateTick();
+  while (!Serial) { ; };
+  if (xSerialSemaphore == NULL) {
+    xSerialSemaphore = xSemaphoreCreateMutex();
+    if (xSerialSemaphore != NULL)
+      xSemaphoreGive(xSerialSemaphore);
+  }
 
-  // move test
-  chassis::move(255, 255);
-  delay(1000);
-  chassis::move(-255, -255);
-  delay(1000);
-  chassis::move(0, 0);
+  xTaskCreate(
+    chassis::taskOdometry,
+    "Odometry", // human name
+    256, // stack size (256 needed if logging enabled)
+    NULL, // parameters
+    2, // Priority (0-3)
+    NULL // Task Handle
+  );
 
-  delay(1000);
+  xTaskCreate(
+    autonomous,
+    "Main Robot Thread",
+    256,
+    NULL,
+    2,
+    NULL
+  );
 }
+
+void autonomous() {
+  while (true) {
+    chassis::turnTo(90);
+    vTaskDelay(134);
+    chassis::turnTo(180);
+    vTaskDelay(134); 
+    chassis::turnTo(270); 
+    vTaskDelay(134);
+    chassis::turnTo(0);
+    vTaskDelay(134);
+  }
+}
+
+// FreeRTOS takes over, no loop.
+void loop() {}
