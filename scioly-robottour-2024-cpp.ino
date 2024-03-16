@@ -6,58 +6,54 @@
  */
 
 #include <Arduino.h>
-#include <Arduino_FreeRTOS.h>
-#include <semphr.h>
+// #include <FreeRTOS.h>
+// #include <task.h>
+// #include <Arduino_FreeRTOS.h>
+// #include <semphr.h>
 
 #include "PID.hpp"
 #include "chassis.hpp"
 #include "config.hpp"
 
-SemaphoreHandle_t xSerialSemaphore = NULL;
-
-void autonomous();
-
 void setup() { 
-  Serial.begin(9600);
+  Serial1.begin(115200);
+  Serial1.println("hello world");
 
-  while (!Serial) { ; };
-  if (xSerialSemaphore == NULL) {
-    xSerialSemaphore = xSemaphoreCreateMutex();
-    if (xSerialSemaphore != NULL)
-      xSemaphoreGive(xSerialSemaphore);
-  }
+  Serial.begin(115200);
+  while (!Serial && millis() < 10000UL);
+  Serial.println("started");
 
-  xTaskCreate(
-    chassis::taskOdometry,
-    "Odometry", // human name
-    256, // stack size (256 needed if logging enabled)
-    NULL, // parameters
-    2, // Priority (0-3)
-    NULL // Task Handle
-  );
-
-  xTaskCreate(
-    autonomous,
-    "Main Robot Thread",
-    256,
-    NULL,
-    2,
-    NULL
-  );
+  pinMode(15, INPUT_PULLUP);
 }
 
-void autonomous() {
-  while (true) {
+void setup1() {
+  Serial1.print("Setting up odom");
+  pinMode(14, OUTPUT);
+  chassis::setupOdometry();
+}
+
+void loop1() {
+  chassis::doOdometryUpdateTick();
+  delay(15);
+}
+
+void loop() {
+  int value = digitalRead(15);
+  if (value == LOW) {
+    digitalWrite(14, HIGH);
+    delay(100);
+    digitalWrite(14, LOW);
+    delay(500);
+
+    chassis::moveTo({ 50, 50, 0 });
+
     chassis::turnTo(90);
-    vTaskDelay(134);
+    delay(134 * 15);
     chassis::turnTo(180);
-    vTaskDelay(134); 
+    delay(134 * 15);
     chassis::turnTo(270); 
-    vTaskDelay(134);
+    delay(134 * 15);
     chassis::turnTo(0);
-    vTaskDelay(134);
+    delay(134 * 15);
   }
 }
-
-// FreeRTOS takes over, no loop.
-void loop() {}

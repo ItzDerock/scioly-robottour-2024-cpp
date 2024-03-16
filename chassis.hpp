@@ -14,7 +14,8 @@ struct Position {
  * Updates the robot position
  */
 void doOdometryUpdateTick();
-void taskOdometry(); // odom task
+void setupOdometry();
+void taskOdometry(void *params); // odom task
 
 /**
  * Returns the current robot position

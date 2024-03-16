@@ -1,12 +1,12 @@
 #include <L298N.h>
-#include <Arduino_FreeRTOS.h>
-#include <semphr.h>
+// #include <Arduino_FreeRTOS.h>
+// #include <semphr.h>
 
 #include "PID.hpp"
 #include "chassis.hpp"
 #include "config.hpp"
 
-#define SETTLE_TIME 300
+#define SETTLE_TIME 500
 #define MOVEMENT_DEBUG true
 
 // not sure if its the motor or the L298N 
@@ -18,8 +18,8 @@
 L298N leftMotor(LEFT_MOTOR_ENABLE, LEFT_MOTOR_IN1, LEFT_MOTOR_IN2);
 L298N rightMotor(RIGHT_MOTOR_ENABLE, RIGHT_MOTOR_IN1, RIGHT_MOTOR_IN2);
 
-PIDController drivePID(10, 0.1, 0.1);
-PIDController turnPID(20, 0.1, 16);
+PIDController drivePID(20, 0.1, 16);
+PIDController turnPID(14, 0.1, 16);
 
 inline float angleSquish(float angle, bool degrees = false) {
   float half = degrees ? 180 : M_PI;
@@ -129,7 +129,8 @@ void chassis::moveTo(Position targetPosition) {
 
     chassis::move(left, right);
 
-    vTaskDelay(1); // 15ms
+    // vTaskDelay(1); // 15ms
+    delay(15);
   }
 
   // stop the motors
