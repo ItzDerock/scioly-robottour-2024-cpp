@@ -45,7 +45,7 @@ void loop() {
     digitalWrite(14, LOW);
     delay(500);
 
-    chassis::moveTo({ 50, 50, 0 });
+    chassis::moveDistance(10);
 
     chassis::turnTo(90);
     delay(134 * 15);

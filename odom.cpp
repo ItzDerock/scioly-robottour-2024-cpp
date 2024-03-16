@@ -34,13 +34,13 @@ void chassis::doOdometryUpdateTick() {
   double leftDistance = toRealDistance(leftEncoder.getCount());
   double rightDistance = toRealDistance(rightEncoder.getCount());
 
-  if (!mpu.update()) {
-    Serial.println("no update");
-  }
+  // if (!mpu.update()) {
+  //   Serial.println("no update");
+  // }
 
   // float(atan2(mpu.getMagY(), mpu.getMagX())) * RAD_TO_DEG
-  float newTheta = (180 + mpu.getYaw()) * M_PI / 180; // to rads
-  if (newTheta > 2 * M_PI) newTheta -= 2 * M_PI;
+  // float newTheta = (180 + mpu.getYaw()) * M_PI / 180; // to rads
+  // if (newTheta > 2 * M_PI) newTheta -= 2 * M_PI;
   
 
   // [-180, 180]
@@ -63,12 +63,14 @@ void chassis::doOdometryUpdateTick() {
 
   // calculate delta distance and delta theta
   double dDistance = (dEncLeft + dEncRight) / 2;
-  double dTheta = newTheta - currentPosition.theta;
+  // double dTheta = newTheta - currentPosition.theta;
+  double dTheta = (dEncRight - dEncLeft) / 2 * TRACK_WIDTH;
 
   // calculate absolute x,y change
   currentPosition.x += dDistance * cos(currentPosition.theta + dTheta / 2);
   currentPosition.y += dDistance * sin(currentPosition.theta + dTheta / 2);
-  currentPosition.theta = newTheta;
+  // currentPosition.theta = newTheta;
+  currentPosition.theta += dTheta;
 
 #if ODOM_DEBUG
   // logging
