@@ -82,7 +82,19 @@ double distance(chassis::Position a, chassis::Position b) {
   return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
 }
 
+void chassis::moveDistance(double dist) {
+  Position initialPosition = getPosition();
+  double targetX = initialPosition.x + dist * cos(initialPosition.theta);
+  double targetY = initialPosition.y + dist * sin(initialPosition.theta);
+  Position target = { targetX, targetY, initialPosition.theta };
+
+  return chassis::moveTo(target);
+}
+
 void chassis::moveTo(Position targetPosition) {
+  drivePID.reset();
+  turnPID.reset();
+
   int8_t sign = 1;
 
   // to finish movement, we should be settled for SETTLED_TIME

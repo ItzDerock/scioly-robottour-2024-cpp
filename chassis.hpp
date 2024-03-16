@@ -28,6 +28,7 @@ Position getPosition();
 void move(int left, int right);
 void drive(double speed, double turn);
 void moveTo(Position targetPosition);
+void moveDistance(double dist);
 void turnTo(float degrees);
 
 }  // namespace chassis
