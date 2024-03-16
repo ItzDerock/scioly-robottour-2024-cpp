@@ -36,6 +36,10 @@
 
         PICO_SDK_PATH = "${pico-sdk-sub}/lib/pico-sdk";
         # PICO_SDK_PATH = builtins.toString ./pico-sdk;
+
+        shellHook = ''
+          git pull
+        '';
       };
     };
 }
