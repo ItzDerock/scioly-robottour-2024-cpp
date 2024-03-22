@@ -11,9 +11,24 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON) # LSP
 
 pico_sdk_init()
 
+
+
+# target_include_directories(main PRIVATE
+#   ${CMAKE_CURRENT_LIST_DIR}/src
+#   )
+
+file(GLOB_RECURSE SOURCES
+  ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/src/*.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/*.h
+  ${CMAKE_CURRENT_LIST_DIR}/src/*.hpp
+  ${CMAKE_CURRENT_LIST_DIR}/src/BNO08x/*.cpp
+  ${CMAKE_CURRENT_LIST_DIR}/src/BNO08x/*.c
+  )
+
 add_executable(main
 src/main.cpp
-)
+${SOURCES})
 
 # generate PIO
 pico_generate_pio_header(

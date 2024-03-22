@@ -30,7 +30,8 @@
           pico-sdk-sub
           python3
           glibc_multi # headers
-          microcom # serial 
+          minicom # serial 
+          openocd-rp2040 # picotool
           clang-tools # lsp
         ];
 

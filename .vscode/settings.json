@@ -1,6 +1,9 @@
 {
-    "C_Cpp.default.includePath": [
-        "${workspaceFolder}/**",
-        "${env:PICO_SDK_PATH}/**"
-    ]
+  "C_Cpp.default.includePath": [
+    "${workspaceFolder}/**",
+    "${env:PICO_SDK_PATH}/**"
+  ],
+  "files.associations": {
+    "functional": "cpp"
+  }
 }
