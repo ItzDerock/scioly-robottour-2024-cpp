@@ -7,19 +7,20 @@
 #endif
 
 struct euler_t {
-  float yaw; float pitch;
+  float yaw;
+  float pitch;
   float roll;
 };
 
-extern euler_t ypr;
+extern euler_t *ypr;
 
-void quaternionToEuler(float qr, float qi, float qj, float qk, euler_t* ypr,
+void quaternionToEuler(float qr, float qi, float qj, float qk, euler_t *ypr,
                        bool degrees = false);
 
-void quaternionToEulerRV(sh2_RotationVectorWAcc_t* rotational_vector,
-                         euler_t* ypr, bool degrees = false);
+void quaternionToEulerRV(sh2_RotationVectorWAcc_t *rotational_vector,
+                         euler_t *ypr, bool degrees = false);
 
-void quaternionToEulerGI(sh2_GyroIntegratedRV_t* rotational_vector,
-                         euler_t* ypr, bool degrees = false);
+void quaternionToEulerGI(sh2_GyroIntegratedRV_t *rotational_vector,
+                         euler_t *ypr, bool degrees = false);
 
 float getHeading();

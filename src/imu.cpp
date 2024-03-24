@@ -1,11 +1,15 @@
 #include <cmath>
 #include <cstdio>
 
+#include "BNO08x/Adafruit_BNO08x.h"
 #include "config.h"
 #include "imu.h"
 
+euler_t *ypr = new euler_t;
+Adafruit_BNO08x *imu = new Adafruit_BNO08x();
+
 void quaternionToEuler(float qr, float qi, float qj, float qk, euler_t *ypr,
-                       bool degrees = false) {
+                       bool degrees) {
   float sqr = qr * qr;
   float sqi = qi * qi;
   float sqj = qj * qj;
@@ -43,17 +47,17 @@ float getHeading() {
   sh2_SensorValue_t event;
   if (!imu->getSensorEvent(&event)) {
     printf("no event\n");
-    return ypr.yaw + 180;
+    return ypr->yaw;
   };
 
   switch (event.sensorId) {
   case SH2_ARVR_STABILIZED_RV:
-    quaternionToEulerRV(&event.un.arvrStabilizedRV, &ypr, true);
+    quaternionToEulerRV(&event.un.arvrStabilizedRV, ypr, true);
   case SH2_GYRO_INTEGRATED_RV:
     // faster (more noise?)
-    quaternionToEulerGI(&event.un.gyroIntegratedRV, &ypr, true);
+    quaternionToEulerGI(&event.un.gyroIntegratedRV, ypr, true);
     break;
   }
 
-  return ypr.yaw + 180;
+  return ypr->yaw;
 }

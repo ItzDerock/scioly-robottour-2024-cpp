@@ -1,10 +1,11 @@
 #include <cstdio>
-#include <inlude stdio.h>
+#include <stdio.h>
 
 #include <cmath>
 
 #include "BNO08x/Adafruit_BNO08x.h"
 #include "boards/pico.h"
+#include "chassis.h"
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
 #include "pico/binary_info.h"
@@ -43,6 +44,8 @@ int main() {
   imu->enableReport(SH2_ARVR_STABILIZED_RV, 5'000);
   float reset_heading = -1;
 
+  chassis::initializeOdometry();
+
   // wait to get first imu
 
   // beep once
@@ -52,11 +55,15 @@ int main() {
 
   // main loop
   while (true) {
-    int left = quadrature_encoder_get_count(pio0, 0);
-    int right = quadrature_encoder_get_count(pio1, 0);
-    float heading = getHeading();
+    chassis::doOdometryTick();
+    auto pos = chassis::getPosition(true);
+    printf("x: %f, y: %f, h: %f\n", pos.x, pos.y, pos.theta);
+    sleep_ms(10);
+    // int left = quadrature_encoder_get_count(pio0, 0);
+    // int right = quadrature_encoder_get_count(pio1, 0);
+    // float heading = getHeading();
 
-    printf("left,right: %d, %d, %f\n", left, right, heading);
-    sleep_ms(50);
+    // printf("left,right: %d, %d, %f\n", left, right, heading);
+    // sleep_ms(50);
   }
 }
