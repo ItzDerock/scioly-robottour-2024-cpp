@@ -6,7 +6,7 @@
 #include "imu.h"
 
 euler_t *ypr = new euler_t;
-Adafruit_BNO08x *imu = new Adafruit_BNO08x();
+Adafruit_BNO08x *imu = new Adafruit_BNO08x(15);
 
 void quaternionToEuler(float qr, float qi, float qj, float qk, euler_t *ypr,
                        bool degrees) {

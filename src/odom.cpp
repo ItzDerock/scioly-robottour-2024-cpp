@@ -13,7 +13,6 @@
 #include <cstdio>
 
 mutex_t* odometryLock = new mutex_t();
-// auto_init_mutex(odometryLock);
 
 #define ODOM_DEBUG false
 
@@ -67,7 +66,12 @@ void chassis::doOdometryTick() {
   // auto deltaRr = right - resetValues.right;
 
   // 5. Calculate new orientation
-  double newTheta = getHeading() * M_PI / 180;
+  double newTheta = getHeading() * M_PI / 180.0f;
+  newTheta -= resetValues.theta;
+  // flip
+  newTheta = 2.0f * M_PI - newTheta;
+  // printf("raw: %f, reset thetha: %f\n", getHeading(), resetValues.theta * 180 / M_PI);
+  newTheta = utils::angleSquish(newTheta);
   // if (newTheta < 2 * M_PI)
   //   newTheta += 2 * M_PI;
 
@@ -139,6 +143,8 @@ void chassis::odometryTask() {
 
 void chassis::initializeOdometry() {
   mutex_init(odometryLock);
+  sleep_ms(500); // give time for sensor to calibrate
+  resetValues.theta = getHeading() * M_PI / 180;
 }
 
 Position chassis::getPosition(bool degrees, bool standardPos) {

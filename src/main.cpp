@@ -16,6 +16,9 @@
 #include "config.h"
 #include "imu.h"
 
+L298N right(6, 5, 4);
+L298N left(7, 8, 9);
+
 int main() {
   // picotool configuration
   bi_decl(bi_program_description(
@@ -34,15 +37,17 @@ int main() {
   pio_add_program(pio1, &quadrature_encoder_program);
   quadrature_encoder_program_init(pio1, 0, RIGHT_WHEEL_ENCODER, 0);
 
-  // beep once
-  gpio_put(BEEPER_PIN, 1);
+  // beep once gpio_put(BEEPER_PIN, 1);
   sleep_ms(50);
   gpio_put(BEEPER_PIN, 0);
 
   // setup BNO
-  imu->begin_I2C(BNO08x_I2CADDR_DEFAULT, i2c0, 16, 17);
+  // hard reset
+  while (!imu->begin_I2C(BNO08x_I2CADDR_DEFAULT, i2c0, 16, 17)) {
+    sleep_ms(100);
+  };
+
   imu->enableReport(SH2_ARVR_STABILIZED_RV, 5'000);
-  float reset_heading = -1;
 
   chassis::initializeOdometry();
 
@@ -56,8 +61,13 @@ int main() {
   // main loop
   while (true) {
     chassis::doOdometryTick();
-    auto pos = chassis::getPosition(true);
-    printf("x: %f, y: %f, h: %f\n", pos.x, pos.y, pos.theta);
+
+    for (int i = 0; i < 100; i++) {
+      left.spin(L298N::Forwards, i);
+    }
+    // auto pos = chassis::getPosition(true);
+    // printf("x: %f, y: %f, h: %f\n", pos.x, pos.y, pos.theta);
+    
     sleep_ms(10);
     // int left = quadrature_encoder_get_count(pio0, 0);
     // int right = quadrature_encoder_get_count(pio1, 0);

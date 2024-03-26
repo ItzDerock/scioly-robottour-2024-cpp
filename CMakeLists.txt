@@ -46,4 +46,5 @@ target_link_libraries(main
   hardware_pio
   hardware_i2c
   hardware_spi
+  hardware_pwm
   )

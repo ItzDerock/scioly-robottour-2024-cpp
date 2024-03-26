@@ -100,13 +100,6 @@ bool Adafruit_BNO08x::begin_I2C(uint8_t i2c_address, i2c_inst_t *wire, uint sda,
   _i2c_dev = wire;
   _i2c_addr = i2c_address;
 
-  if (self != nullptr) {
-    printf("BNO08x - Only one instance of BNO08x is supported at a time.");
-    return false;
-  }
-
-  self = this;
-
   // if (i2c_dev) {
   //   delete i2c_dev; // remove old interface
   // }
@@ -114,6 +107,8 @@ bool Adafruit_BNO08x::begin_I2C(uint8_t i2c_address, i2c_inst_t *wire, uint sda,
   // set up the reset pin
   gpio_init(_reset_pin);
   gpio_set_dir(_reset_pin, GPIO_OUT);
+  gpio_put(_reset_pin, 1); // PULL LOW FOR RESET
+  // gpio_pull_up(_reset_pin);
 
   // initialize i2c
   i2c_init(_i2c_dev, 100 * 1000);  // TODO: figure out speed
@@ -128,9 +123,16 @@ bool Adafruit_BNO08x::begin_I2C(uint8_t i2c_address, i2c_inst_t *wire, uint sda,
   uint8_t rxdata;
   int ret = i2c_read_blocking(_i2c_dev, i2c_address, &rxdata, 1, false);
   if (ret < 0) {
-    printf("Failed to connect to i2c.");
+    printf("Failed to connect to i2c.\n");
     return false;
   }
+
+  if (self != nullptr) {
+    printf("BNO08x - Only one instance of BNO08x is supported at a time!\n");
+    return false;
+  }
+
+  self = this;
 
   // dunno how to get bind to work
   // _HAL.open = std::bind(&i2chal_open, this, std::placeholders::_1);
@@ -389,7 +391,7 @@ static int i2chal_write(/* Adafruit_BNO08x *self */ sh2_Hal_t *hal,
 
 static void hal_hardwareReset(Adafruit_BNO08x *self) {
   if (self->_reset_pin != -1) {
-    // Serial.println("BNO08x Hardware reset");
+    printf("BNO08x Hardware reset\n");
     gpio_put(self->_reset_pin, 1);
     sleep_ms(10);
     gpio_put(self->_reset_pin, 0);
