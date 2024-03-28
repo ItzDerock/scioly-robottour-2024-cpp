@@ -9,6 +9,7 @@
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
 #include "pico/binary_info.h"
+#include "pico/multicore.h"
 #include "pico/platform.h"
 #include "pico/stdlib.h"
 #include "quadrature_encoder.pio.h"
@@ -16,8 +17,8 @@
 #include "config.h"
 #include "imu.h"
 
-L298N right(6, 5, 4);
-L298N left(7, 8, 9);
+L298N driveRight(6, 5, 4);
+L298N driveLeft(7, 8, 9);
 
 int main() {
   // picotool configuration
@@ -50,6 +51,7 @@ int main() {
   imu->enableReport(SH2_ARVR_STABILIZED_RV, 5'000);
 
   chassis::initializeOdometry();
+  multicore_launch_core1(chassis::odometryTask);
 
   // wait to get first imu
 
@@ -60,15 +62,25 @@ int main() {
 
   // main loop
   while (true) {
-    chassis::doOdometryTick();
 
-    for (int i = 0; i < 100; i++) {
-      left.spin(L298N::Forwards, i);
-    }
-    // auto pos = chassis::getPosition(true);
-    // printf("x: %f, y: %f, h: %f\n", pos.x, pos.y, pos.theta);
-    
-    sleep_ms(10);
+    // gen points
+    // std::shared_ptr<std::vector<Position>> points = std::make_shared<std::vector<Position>>();
+    // for (int y = 0; y < 50; y++) {
+    //   points->push_back({0, (double)y, 40});
+    // }
+    // for (int x = 0; x < 50; x++) {
+    //   points->push_back({(double)x, 50, 40});
+    // }
+    // points->push_back({50, 50, 0});
+
+    // chassis::follow(points, 30, 10'000, true, false);
+    // for (int i = -127; i <= 127; i++) {
+    //   chassis::move(i, i);
+    //   sleep_ms(100);
+    //
+    // }
+
+    sleep_ms(10'000);
     // int left = quadrature_encoder_get_count(pio0, 0);
     // int right = quadrature_encoder_get_count(pio1, 0);
     // float heading = getHeading();

@@ -12,7 +12,7 @@
 #include <cmath>
 #include <cstdio>
 
-mutex_t* odometryLock = new mutex_t();
+mutex_t *odometryLock = new mutex_t();
 
 #define ODOM_DEBUG false
 
@@ -39,7 +39,7 @@ inline static double readSensorData(pio_hw_t *pio) {
   // count time by 14-counts-per-revolution and the approximate 20.4:1 gear
   // ratio (for extra credit, the exact ratio is 244904:12000 or 30613:1500).
   int rawCount = quadrature_encoder_get_count(pio, 0);
-  return (float)rawCount / 14 / (244984.0f / 12000) * 6.5f; 
+  return (float)rawCount / 14 / (244984.0f / 12000) * 6.5f;
 }
 
 void chassis::doOdometryTick() {
@@ -70,7 +70,8 @@ void chassis::doOdometryTick() {
   newTheta -= resetValues.theta;
   // flip
   newTheta = 2.0f * M_PI - newTheta;
-  // printf("raw: %f, reset thetha: %f\n", getHeading(), resetValues.theta * 180 / M_PI);
+  // printf("raw: %f, reset thetha: %f\n", getHeading(), resetValues.theta * 180
+  // / M_PI);
   newTheta = utils::angleSquish(newTheta);
   // if (newTheta < 2 * M_PI)
   //   newTheta += 2 * M_PI;
@@ -91,6 +92,10 @@ void chassis::doOdometryTick() {
 void chassis::odometryTask() {
   while (true) {
     doOdometryTick();
+    
+    // auto pos = chassis::getPosition(true);
+    // printf("x: %f, y: %f, h: %f\n", pos.x, pos.y, pos.theta);
+
     sleep_ms(10);
   }
 }
@@ -143,7 +148,12 @@ void chassis::odometryTask() {
 
 void chassis::initializeOdometry() {
   mutex_init(odometryLock);
-  sleep_ms(500); // give time for sensor to calibrate
+  
+  for (int i = 0; i < 50; i++) {
+    getHeading();
+    sleep_ms(10);
+  }
+
   resetValues.theta = getHeading() * M_PI / 180;
 }
 
@@ -164,4 +174,22 @@ Position chassis::getPosition(bool degrees, bool standardPos) {
   }
 
   return returnState;
+}
+
+void chassis::move(int left, int right) {
+  // get direction
+  bool leftFwd = left > 0;
+  bool rightFwd = right > 0;
+
+  // now take abs
+  left = std::abs(left);
+  right = std::abs(right);
+
+  // and convert from [0, 127] to [0, 100]
+  float leftSpeed = (float)left / 127 * 100;
+  float rightSpeed = (float)right / 127 * 100;
+
+  // now move
+  driveLeft.spin(leftFwd, leftSpeed);
+  driveRight.spin(rightFwd, rightSpeed);
 }
