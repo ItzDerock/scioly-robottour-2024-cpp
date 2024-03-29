@@ -19,7 +19,7 @@ L298N::L298N(uint enableFwd, uint enableRev, uint pwm)
 
   pwm_config cfg = pwm_get_default_config();
   gpio_set_function(pwm, GPIO_FUNC_PWM);
-  pwm_config_set_clkdiv(&cfg, 6.f);
+  pwm_config_set_clkdiv(&cfg, 10.f);
   pwm_init(pwmSlice, &cfg, true);
 
   // Start with 0% duty cycle

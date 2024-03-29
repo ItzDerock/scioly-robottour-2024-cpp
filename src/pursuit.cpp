@@ -231,15 +231,14 @@ void chassis::follow(std::shared_ptr<std::vector<Position>> pathPoints,
 
     // move the drivetrain
     if (forwards) {
-      chassis::move(targetLeftVel, targetRightVel);
+      chassis::moveVelocity(targetLeftVel, targetRightVel);
     } else {
-      chassis::move(-targetRightVel, -targetLeftVel);
+      chassis::moveVelocity(-targetRightVel, -targetLeftVel);
     }
 
     // pros::delay(10);
     sleep_ms(20);
   }
 
-  driveLeft.stop();
-  driveRight.stop();
+  chassis::moveVelocity(0, 0);
 }

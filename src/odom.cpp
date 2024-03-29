@@ -1,3 +1,4 @@
+#include "Motor.h"
 #include "chassis.h"
 #include "config.h"
 #include "imu.h"
@@ -12,19 +13,21 @@
 #include <cmath>
 #include <cstdio>
 
+MotorController chassis::driveLeftController =
+    MotorController(1.25, 0, 2, 20, 1.7, 0);
+
+MotorController chassis::driveRightController =
+    MotorController(1.25, 0, 2, 20, 1.7, 0);
+
 mutex_t *odometryLock = new mutex_t();
 
 #define ODOM_DEBUG false
 
-struct {
-  double left, right, theta;
-} prevSensors = {0, 0, 0};
-
-struct {
-  double left, right, theta;
-} resetValues = {0, 0, 0};
+LRT resetValues = {0, 0, 0};
+LRT prevSensors = {0, 0, 0};
 
 Position *state = new Position({0, 0, 0});
+LRT *chassis::velocity = new LRT({0, 0, 0});
 
 /**
  * Normalizes the sensor data to account for factors such as
@@ -61,6 +64,10 @@ void chassis::doOdometryTick() {
   prevSensors.left = left;
   prevSensors.right = right;
 
+  // Calculate motor velocities
+  velocity->left = dL / 0.01f;
+  velocity->right = dL / 0.01f;
+
   // 4. total change since last reset
   // auto deltaLr = left - resetValues.left;
   // auto deltaRr = right - resetValues.right;
@@ -92,7 +99,14 @@ void chassis::doOdometryTick() {
 void chassis::odometryTask() {
   while (true) {
     doOdometryTick();
-    
+
+    float leftSpeed =
+        chassis::driveLeftController.update(chassis::velocity->left);
+    float rightSpeed =
+        chassis::driveRightController.update(chassis::velocity->right);
+
+    chassis::move(leftSpeed, rightSpeed);
+
     // auto pos = chassis::getPosition(true);
     // printf("x: %f, y: %f, h: %f\n", pos.x, pos.y, pos.theta);
 
@@ -148,7 +162,7 @@ void chassis::odometryTask() {
 
 void chassis::initializeOdometry() {
   mutex_init(odometryLock);
-  
+
   for (int i = 0; i < 50; i++) {
     getHeading();
     sleep_ms(10);
@@ -176,6 +190,11 @@ Position chassis::getPosition(bool degrees, bool standardPos) {
   return returnState;
 }
 
+void chassis::moveVelocity(int left, int right) {
+  chassis::driveLeftController.setTargetVelocity(left);
+  chassis::driveRightController.setTargetVelocity(right);
+}
+
 void chassis::move(int left, int right) {
   // get direction
   bool leftFwd = left > 0;
@@ -190,6 +209,6 @@ void chassis::move(int left, int right) {
   float rightSpeed = (float)right / 127 * 100;
 
   // now move
-  driveLeft.spin(leftFwd, leftSpeed);
-  driveRight.spin(rightFwd, rightSpeed);
+  driveLeft.spin(leftFwd, leftSpeed > 100 ? 100 : leftSpeed);
+  driveRight.spin(rightFwd, rightSpeed > 100 ? 100 : rightSpeed);
 }

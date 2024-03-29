@@ -64,23 +64,24 @@ int main() {
   while (true) {
 
     // gen points
-    // std::shared_ptr<std::vector<Position>> points = std::make_shared<std::vector<Position>>();
-    // for (int y = 0; y < 50; y++) {
-    //   points->push_back({0, (double)y, 40});
-    // }
-    // for (int x = 0; x < 50; x++) {
-    //   points->push_back({(double)x, 50, 40});
-    // }
-    // points->push_back({50, 50, 0});
+    std::shared_ptr<std::vector<Position>> points =
+    std::make_shared<std::vector<Position>>(); for (int y = 0; y < 50; y++) {
+      points->push_back({0, (double)y, 20});
+    }
+    for (int x = 0; x < 50; x++) {
+      points->push_back({(double)x, 50, 20});
+    }
+    points->push_back({50, 50, 0});
+points->push_back({50, 50, 0});
 
-    // chassis::follow(points, 30, 10'000, true, false);
+    chassis::follow(points, 30, 10'000, true, false);
     // for (int i = -127; i <= 127; i++) {
     //   chassis::move(i, i);
     //   sleep_ms(100);
     //
     // }
 
-    sleep_ms(10'000);
+    // sleep_ms(10'000);
     // int left = quadrature_encoder_get_count(pio0, 0);
     // int right = quadrature_encoder_get_count(pio1, 0);
     // float heading = getHeading();
