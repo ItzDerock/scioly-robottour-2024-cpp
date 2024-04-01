@@ -14,10 +14,10 @@
 #include <cstdio>
 
 MotorController chassis::driveLeftController =
-    MotorController(1.25, 0, 2, 20, 1.7, 0);
+    MotorController(1.5, 0, 1.25, 15, 1.7, 0);
 
 MotorController chassis::driveRightController =
-    MotorController(1.25, 0, 2, 20, 1.7, 0);
+    MotorController(1.5, 0, 1.25, 15, 1.7, 0);
 
 mutex_t *odometryLock = new mutex_t();
 
@@ -26,7 +26,7 @@ mutex_t *odometryLock = new mutex_t();
 LRT resetValues = {0, 0, 0};
 LRT prevSensors = {0, 0, 0};
 
-Position *state = new Position({0, 0, 0});
+Position *state = new Position({0, 25, 0});
 LRT *chassis::velocity = new LRT({0, 0, 0});
 
 /**
@@ -66,7 +66,7 @@ void chassis::doOdometryTick() {
 
   // Calculate motor velocities
   velocity->left = dL / 0.01f;
-  velocity->right = dL / 0.01f;
+  velocity->right = dR / 0.01f;
 
   // 4. total change since last reset
   // auto deltaLr = left - resetValues.left;

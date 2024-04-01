@@ -27,16 +27,15 @@
  * @param path the path to follow
  * @return int index to the closest point
  */
-int findClosest(Position pose,
-                std::shared_ptr<std::vector<Position>> path) {
+int findClosest(Position pose, std::vector<Position> &path) {
   int closestPoint;
   float closestDist = 1000000;
   float dist;
 
   // loop through all path points
-  for (int i = 0; i < path->size(); i++) {
-    dist = pose.distance(path->at(i));
-    if (dist < closestDist) {  // new closest point
+  for (int i = 0; i < path.size(); i++) {
+    dist = pose.distance(path.at(i));
+    if (dist < closestDist) { // new closest point
       closestDist = dist;
       closestPoint = i;
     }
@@ -54,9 +53,8 @@ int findClosest(Position pose,
  * @param path the path to follow
  * @return float how far along the line the
  */
-float circleIntersect(const Position& p1,
-                      const Position& p2,
-                      const Position& pose, float lookaheadDist) {
+float circleIntersect(const Position &p1, const Position &p2,
+                      const Position &pose, float lookaheadDist) {
   // calculations
   // uses the quadratic formula to calculate intersection points
   Position d = p2 - p1;
@@ -91,10 +89,9 @@ float circleIntersect(const Position& p1,
  * @param path - the path to follow
  * @param lookaheadDist - the lookahead distance of the algorithm
  */
-Position lookaheadPoint(
-    const Position& lastLookahead, const Position& pose,
-    std::shared_ptr<std::vector<Position>> path, int closest,
-    float lookaheadDist) {
+Position lookaheadPoint(const Position &lastLookahead, const Position &pose,
+                        std::vector<Position> &path, int closest,
+                        float lookaheadDist) {
   // find the furthest lookahead point on the path
 
   // optimizations applied:
@@ -102,9 +99,9 @@ Position lookaheadPoint(
   // point closest to the robot and intersections that have an index greater
   // than or equal to the index of the last lookahead point
   const int start = std::max(closest, int(lastLookahead.theta));
-  for (int i = start; i < path->size() - 1; i++) {
-    Position lastPathPose = path->at(i);
-    Position currentPathPose = path->at(i + 1);
+  for (int i = start; i < path.size() - 1; i++) {
+    Position lastPathPose = path.at(i);
+    Position currentPathPose = path.at(i + 1);
 
     float t =
         circleIntersect(lastPathPose, currentPathPose, pose, lookaheadDist);
@@ -129,8 +126,8 @@ Position lookaheadPoint(
  * @param lookahead the lookahead point
  * @return float curvature
  */
-float findLookaheadCurvature(const Position& pose, float heading,
-                             const Position& lookahead) {
+float findLookaheadCurvature(const Position &pose, float heading,
+                             const Position &lookahead) {
   // calculate whether the robot is on the left or right side of the circle
   float side = utils::sgn(std::sin(heading) * (lookahead.x - pose.x) -
                           std::cos(heading) * (lookahead.y - pose.y));
@@ -157,8 +154,8 @@ float findLookaheadCurvature(const Position& pose, float heading,
  * @param async whether the function should be run asynchronously. true by
  * default
  */
-void chassis::follow(std::shared_ptr<std::vector<Position>> pathPoints,
-                  float lookahead, int timeout, bool forwards, bool async) {
+void chassis::follow(std::vector<Position> &pathPoints, float lookahead,
+                     int timeout, bool forwards, bool async) {
   // if (async) {
   //   pros::Task task(
   //       [&]() { follow(pathPoints, lookahead, timeout, forwards, false); });
@@ -169,7 +166,7 @@ void chassis::follow(std::shared_ptr<std::vector<Position>> pathPoints,
   Position pose = chassis::getPosition();
   Position lastPose = pose;
   Position lookaheadPose(0, 0, 0);
-  Position lastLookahead = pathPoints->at(0);
+  Position lastLookahead = pathPoints.at(0);
   lastLookahead.theta = 0;
   float curvature;
   float targetVel;
@@ -182,11 +179,13 @@ void chassis::follow(std::shared_ptr<std::vector<Position>> pathPoints,
   // distTravelled = 0;
 
   // loop until the robot is within the end tolerance
-  for (int i = 0;
-       i < timeout / 10; i++) {
+  for (int i = 0; i < timeout / 10; i++) {
     // get the current position of the robot
     pose = getPosition();
-    if (!forwards) pose.theta -= M_PI;
+    if (!forwards)
+      pose.theta -= M_PI;
+  
+    // printf("pose: %f, %f, %f\n", pose.x, pose.y, utils::radToDeg(pose.theta));
 
     // update completion vars
     // distTravelled += pose.distance(lastPose);
@@ -195,25 +194,26 @@ void chassis::follow(std::shared_ptr<std::vector<Position>> pathPoints,
     // find the closest point on the path to the robot
     closestPoint = findClosest(pose, pathPoints);
     // if the robot is at the end of the path, then stop
-    if (pathPoints->at(closestPoint).theta == 0) break;
+    if (pathPoints.at(closestPoint).theta == 0)
+      break;
 
     // find the lookahead point
     lookaheadPose = lookaheadPoint(lastLookahead, pose, pathPoints,
                                    closestPoint, lookahead);
-    lastLookahead = lookaheadPose;  // update last lookahead position
+    lastLookahead = lookaheadPose; // update last lookahead position
 
     // get the curvature of the arc between the robot and the lookahead point
     float curvatureHeading = M_PI_2 - pose.theta;
     curvature = findLookaheadCurvature(pose, curvatureHeading, lookaheadPose);
 
     // get the target velocity of the robot
-    targetVel = pathPoints->at(closestPoint).theta;
-    targetVel = utils::slew(targetVel, prevVel, 2);
+    targetVel = pathPoints.at(closestPoint).theta;
+    targetVel = utils::slew(targetVel, prevVel, 1);
     prevVel = targetVel;
 
     // calculate target left and right velocities
-    float targetLeftVel = targetVel * (2 + curvature * DRIVE_TRACK_WIDTH) / 2;
-    float targetRightVel = targetVel * (2 - curvature * DRIVE_TRACK_WIDTH) / 2;
+    float targetLeftVel = targetVel * (1 + curvature * DRIVE_TRACK_WIDTH) / 2;
+    float targetRightVel = targetVel * (1 - curvature * DRIVE_TRACK_WIDTH) / 2;
 
     // ratio the speeds to respect the max speed
     float ratio =

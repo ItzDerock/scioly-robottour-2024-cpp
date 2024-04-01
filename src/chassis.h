@@ -32,7 +32,7 @@ Position getPosition(bool degrees = false, bool standardPos = false);
 void move(int left, int right);
 void moveVelocity(int left, int right);
 
-void follow(std::shared_ptr<std::vector<Position>> pathPoints, float lookahead,
+void follow(std::vector<Position> &pathPoints, float lookahead,
             int timeout, bool forwards, bool async);
 
 } // namespace chassis

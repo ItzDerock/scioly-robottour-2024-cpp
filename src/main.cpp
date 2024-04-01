@@ -16,6 +16,7 @@
 
 #include "config.h"
 #include "imu.h"
+#include "path.h"
 
 L298N driveRight(6, 5, 4);
 L298N driveLeft(7, 8, 9);
@@ -64,17 +65,36 @@ int main() {
   while (true) {
 
     // gen points
-    std::shared_ptr<std::vector<Position>> points =
-    std::make_shared<std::vector<Position>>(); for (int y = 0; y < 50; y++) {
-      points->push_back({0, (double)y, 20});
-    }
-    for (int x = 0; x < 50; x++) {
-      points->push_back({(double)x, 50, 20});
-    }
-    points->push_back({50, 50, 0});
-points->push_back({50, 50, 0});
+    PathVector points = PathVector {
+      Position{0, 0, 0},
+      Position{0, 1, 0},
+      Position{1, 1 ,0},
+      Position{1, 2, 0},
+      Position{3, 2, 0},
+      Position{2, 2, 0},
+      Position{2, 1, 0},
+      Position{0, 0, 0},
+      Position{0, 1, 0},
+      Position{1, 1, 0},
+      Position{1, 2, 0},
+      Position{0, 2, 0},
+      Position{0, 3, 0},
+      Position{1, 3, 0}
+    };
 
-    chassis::follow(points, 30, 10'000, true, false);
+    // convert
+    PathVector result;
+    toAbsoluteCoordinates(points);
+    interpolateAbsolutePath(points, result);
+
+    // print
+    for (int i = 0; i < result.size(); i++) {
+      auto point = result.at(i);
+      printf("%d: (%f, %f) at %f RPM\n", i, point.x, point.y, point.theta);
+    }
+
+
+    chassis::follow(result, 7, 50'000, true, false);
     // for (int i = -127; i <= 127; i++) {
     //   chassis::move(i, i);
     //   sleep_ms(100);
@@ -87,6 +107,6 @@ points->push_back({50, 50, 0});
     // float heading = getHeading();
 
     // printf("left,right: %d, %d, %f\n", left, right, heading);
-    // sleep_ms(50);
+    sleep_ms(10'000);
   }
 }
