@@ -1,7 +1,7 @@
 #pragma once
 
 #include "position.h"
-#include "Motor.h"
+#include "components/Motor.h"
 #include <memory>
 #include <vector>
 
@@ -34,5 +34,7 @@ void moveVelocity(int left, int right);
 
 void follow(std::vector<Position> &pathPoints, float lookahead,
             int timeout, bool forwards, bool async);
+
+void turnTo(float angle);
 
 } // namespace chassis

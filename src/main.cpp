@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include <cmath>
+#include <variant>
 
 #include "BNO08x/Adafruit_BNO08x.h"
 #include "boards/pico.h"
@@ -30,7 +31,14 @@ int main() {
 
   // initialize GPIO
   gpio_init(BEEPER_PIN);
+  gpio_init(START_BUTTON_PIN);
+  gpio_init(LIGHT_PIN);
+
+  gpio_pull_up(START_BUTTON_PIN);
+  gpio_set_dir(START_BUTTON_PIN, GPIO_IN);
+
   gpio_set_dir(BEEPER_PIN, GPIO_OUT);
+  gpio_set_dir(LIGHT_PIN, GPIO_OUT);
 
   // initialize PIOs
   pio_add_program(pio0, &quadrature_encoder_program);
@@ -61,52 +69,47 @@ int main() {
   sleep_ms(200);
   gpio_put(BEEPER_PIN, 0);
 
+  // gen points
+  PathVector points = PathVector{Position{0, 0, 0}, Position{0, 1, 0},
+                                 Position{1, 1, 0}, Position{0, 1, 0}};
+
+  // convert
+  printf("running pathgen...");
+  std::vector<PathSegment> result;
+  toAbsoluteCoordinates(points);
+  interpolateAbsolutePath(points, result);
+  printf("pathgen done");
+
+  // led and wait for start
+  while (true) {
+    gpio_put(START_BUTTON_PIN, 1);
+    sleep_ms(50);
+    gpio_put(START_BUTTON_PIN, 0);
+
+    if (!gpio_get(START_BUTTON_PIN)) // pulled up
+      break;
+
+
+    sleep_ms(50);
+  }
+  gpio_put(LIGHT_PIN, 0);
+  sleep_ms(100);
+
+  // run path
+  for (PathSegment segment : result) {
+    if (std::holds_alternative<float>(segment.data)) {
+      chassis::turnTo(std::get<float>(segment.data));
+    } else {
+      chassis::follow(std::get<PathVector>(segment.data), 5, 10'000, true,
+                      false);
+    }
+  }
+
   // main loop
   while (true) {
-
-    // gen points
-    PathVector points = PathVector {
-      Position{0, 0, 0},
-      Position{0, 1, 0},
-      Position{1, 1 ,0},
-      Position{1, 2, 0},
-      Position{3, 2, 0},
-      Position{2, 2, 0},
-      Position{2, 1, 0},
-      Position{0, 0, 0},
-      Position{0, 1, 0},
-      Position{1, 1, 0},
-      Position{1, 2, 0},
-      Position{0, 2, 0},
-      Position{0, 3, 0},
-      Position{1, 3, 0}
-    };
-
-    // convert
-    PathVector result;
-    toAbsoluteCoordinates(points);
-    interpolateAbsolutePath(points, result);
-
-    // print
-    for (int i = 0; i < result.size(); i++) {
-      auto point = result.at(i);
-      printf("%d: (%f, %f) at %f RPM\n", i, point.x, point.y, point.theta);
-    }
-
-
-    chassis::follow(result, 7, 50'000, true, false);
-    // for (int i = -127; i <= 127; i++) {
-    //   chassis::move(i, i);
-    //   sleep_ms(100);
-    //
-    // }
-
-    // sleep_ms(10'000);
-    // int left = quadrature_encoder_get_count(pio0, 0);
-    // int right = quadrature_encoder_get_count(pio1, 0);
-    // float heading = getHeading();
-
-    // printf("left,right: %d, %d, %f\n", left, right, heading);
-    sleep_ms(10'000);
+    gpio_put(LIGHT_PIN, 1);
+    sleep_ms(1'000);
+    gpio_put(LIGHT_PIN, 0);
+    sleep_ms(1'000);
   }
 }

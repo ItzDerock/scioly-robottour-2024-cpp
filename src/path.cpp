@@ -1,6 +1,7 @@
 #include "path.h"
 #include "position.h"
 
+#include <optional>
 #include <stdio.h>
 
 static const int SPEED = 50;
@@ -19,26 +20,44 @@ void toAbsoluteCoordinates(PathVector &path) {
   printf("size: %d\n", path.size());
 }
 
-void interpolateAbsolutePath(PathVector &path, PathVector &result) {
+void interpolateAbsolutePath(PathVector &path,
+                             std::vector<PathSegment> &result) {
+  std::optional<Position> prev;
+  PathVector currentPath;
+
   for (int i = 0; i < path.size() - 1; i++) {
     Position start = path.at(i);
     Position end = path.at(i + 1);
 
     double d = start.distance(end);
 
-    // result.push_back(Position{start.x, start.y, SPEED});
-
     for (double n = 1; n < d; n++) {
-      result.push_back(
+      currentPath.push_back(
           Position{/* .x = */ start.x + n / d * (end.x - start.x),
                    /* .y = */ start.y + n / d * (end.y - start.y),
                    /* .theta = */ SPEED});
     }
 
     if (i + 1 == path.size() - 1) {
-      result.push_back(Position{end.x, end.y, 0});
+      currentPath.push_back(Position{end.x, end.y, 0});
     } else {
-      result.push_back(Position{end.x, end.y, SPEED});
+      currentPath.push_back(Position{end.x, end.y, SPEED});
     }
+
+    // check if 180deg turn
+    if (prev.has_value() && prev->equals(end, false)) {
+      result.push_back({
+          0, // field not used atm
+          currentPath,
+      });
+      result.push_back({0, start.angle(end)});
+
+      currentPath = std::vector<Position>();
+    }
+
+    prev = start;
   }
+
+  // push in last segment
+  result.push_back({0, currentPath});
 }
