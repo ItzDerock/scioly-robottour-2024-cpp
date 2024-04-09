@@ -1,13 +1,13 @@
 #pragma once
 
-#include "position.h"
 #include "components/Motor.h"
+#include "position.h"
 #include <memory>
 #include <vector>
 
 struct LRT {
   double left, right, theta;
-}; 
+};
 
 namespace chassis {
 
@@ -32,9 +32,11 @@ Position getPosition(bool degrees = false, bool standardPos = false);
 void move(int left, int right);
 void moveVelocity(int left, int right);
 
-void follow(std::vector<Position> &pathPoints, float lookahead,
-            int timeout, bool forwards, bool async);
+void follow(std::vector<Position> &pathPoints, float lookahead, int timeout,
+            bool forwards, bool async);
 
 void turnTo(float angle);
+
+void setPose(const Position &newState);
 
 } // namespace chassis

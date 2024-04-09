@@ -1,5 +1,5 @@
-#include "components/Motor.h"
 #include "chassis.h"
+#include "components/Motor.h"
 #include "config.h"
 #include "imu.h"
 #include "utils.h"
@@ -26,7 +26,7 @@ mutex_t *odometryLock = new mutex_t();
 LRT resetValues = {0, 0, 0};
 LRT prevSensors = {0, 0, 0};
 
-Position *state = new Position({0, 25, 0});
+Position *state = new Position({0, 0, 0});
 LRT *chassis::velocity = new LRT({0, 0, 0});
 
 /**
@@ -112,6 +112,16 @@ void chassis::odometryTask() {
 
     sleep_ms(10);
   }
+}
+
+void chassis::setPose(const Position &newState) {
+  mutex_enter_blocking(odometryLock);
+
+  state->x = newState.x;
+  state->y = newState.y;
+  state->theta = newState.theta;
+
+  mutex_exit(odometryLock);
 }
 
 // void odom::reset(odom::RobotPosition startState) {

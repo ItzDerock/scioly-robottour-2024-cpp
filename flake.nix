@@ -21,10 +21,10 @@
             sha256 = "sha256-GY5jjJzaENL3ftuU5KpEZAmEZgyFRtLwGVg3W1e/4Ho=";
           };
         }));
-    in
-    {
-      devShell.x86_64-linux = pkgs.mkShell {
-        buildInputs = with pkgs; [
+
+      fhs = pkgs.buildFHSUserEnv {
+        name = "fhs-shell";
+        targetPkgs = pkgs: with pkgs; [
           cmake
           gcc-arm-embedded
           pico-sdk-sub
@@ -35,8 +35,13 @@
           clang-tools # lsp
         ];
 
-        PICO_SDK_PATH = "${pico-sdk-sub}/lib/pico-sdk";
-        # PICO_SDK_PATH = builtins.toString ./pico-sdk;
+        runScript = "bash";
+        profile = ''
+          export PICO_SDK_PATH="${pico-sdk-sub}/lib/pico-sdk"
+        '';
       };
+    in
+    {
+      devShells.x86_64-linux.default = fhs.env;
     };
 }

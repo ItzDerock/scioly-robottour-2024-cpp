@@ -60,6 +60,7 @@ int main() {
   imu->enableReport(SH2_ARVR_STABILIZED_RV, 5'000);
 
   chassis::initializeOdometry();
+  chassis::setPose({25, 0, 0});
   multicore_launch_core1(chassis::odometryTask);
 
   // wait to get first imu
@@ -73,22 +74,45 @@ int main() {
   PathVector points = PathVector{Position{0, 0, 0}, Position{0, 1, 0},
                                  Position{1, 1, 0}, Position{0, 1, 0}};
 
-  // convert
-  printf("running pathgen...");
-  std::vector<PathSegment> result;
+  // convert to centimeters
+  printf("[info] running pathgen...\n");
   toAbsoluteCoordinates(points);
+
+  printf("[debug] converted path:\n[debug]  <%f, %f> ",
+         chassis::getPosition().x, chassis::getPosition().y);
+  for (Position segment : points) {
+    printf("(%f, %f) -> ", segment.x, segment.y);
+  }
+  printf("\n");
+
+  // interpolate all missing points
+  std::vector<PathSegment> result;
   interpolateAbsolutePath(points, result);
-  printf("pathgen done");
+  printf("[info] pathgen done\n");
+
+  // debug information
+  printf("[debug] Planned path:\n");
+  for (PathSegment segment : result) {
+    if (std::holds_alternative<float>(segment.data)) {
+      printf("[debug] turn to %f\n", std::get<float>(segment.data));
+    } else {
+      PathVector path = std::get<PathVector>(segment.data);
+      printf("[debug] follow path:\n");
+
+      for (Position position : path) {
+        printf("[debug]  - %f, %f\n", position.x, position.y);
+      }
+    }
+  }
 
   // led and wait for start
   while (true) {
-    gpio_put(START_BUTTON_PIN, 1);
+    gpio_put(LIGHT_PIN, 1);
     sleep_ms(50);
-    gpio_put(START_BUTTON_PIN, 0);
+    gpio_put(LIGHT_PIN, 0);
 
     if (!gpio_get(START_BUTTON_PIN)) // pulled up
       break;
-
 
     sleep_ms(50);
   }
@@ -98,9 +122,12 @@ int main() {
   // run path
   for (PathSegment segment : result) {
     if (std::holds_alternative<float>(segment.data)) {
-      chassis::turnTo(std::get<float>(segment.data));
+      float targetHeading = std::get<float>(segment.data);
+      printf("turning to %d\n", targetHeading);
+      chassis::turnTo(targetHeading);
     } else {
-      chassis::follow(std::get<PathVector>(segment.data), 5, 10'000, true,
+      printf("Following path\n");
+      chassis::follow(std::get<PathVector>(segment.data), 7, 10'000, true,
                       false);
     }
   }

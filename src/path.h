@@ -1,8 +1,8 @@
 #pragma once
 
 #include "position.h"
-#include <vector>
 #include <variant>
+#include <vector>
 
 typedef std::vector<Position> PathVector;
 
@@ -12,4 +12,5 @@ struct PathSegment {
 };
 
 void toAbsoluteCoordinates(PathVector &path);
-void interpolateAbsolutePath(PathVector &path, std::vector<PathSegment> &result);
+void interpolateAbsolutePath(PathVector &path,
+                             std::vector<PathSegment> &result);
