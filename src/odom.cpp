@@ -42,7 +42,12 @@ inline static double readSensorData(pio_hw_t *pio) {
   // count time by 14-counts-per-revolution and the approximate 20.4:1 gear
   // ratio (for extra credit, the exact ratio is 244904:12000 or 30613:1500).
   int rawCount = quadrature_encoder_get_count(pio, 0);
-  return (float)rawCount / 14 / (244984.0f / 12000) * 6.5f;
+
+  // printf("[debug] [raw] encoder counts: %d\n", rawCount);
+
+  // return (float)rawCount / 14 / (244984.0f / 12000) * 6.5f * M_PI;
+
+  return (float)rawCount / 1060.5 * 6.5f * M_PI;
 }
 
 void chassis::doOdometryTick() {
@@ -75,11 +80,14 @@ void chassis::doOdometryTick() {
   // 5. Calculate new orientation
   double newTheta = getHeading() * M_PI / 180.0f;
   newTheta -= resetValues.theta;
+  // printf("[debug] real: %f, reset theta: %f\n", getHeading() * M_PI / 180.0f, resetValues.theta);
+  // printf("[debug] so now: %f\n", newTheta);
+
   // flip
   newTheta = 2.0f * M_PI - newTheta;
   // printf("raw: %f, reset thetha: %f\n", getHeading(), resetValues.theta * 180
   // / M_PI);
-  newTheta = utils::angleSquish(newTheta);
+  newTheta = utils::angleSquish(newTheta, true);
   // if (newTheta < 2 * M_PI)
   //   newTheta += 2 * M_PI;
 
@@ -97,6 +105,8 @@ void chassis::doOdometryTick() {
 }
 
 void chassis::odometryTask() {
+  int i = 0;
+
   while (true) {
     doOdometryTick();
 
@@ -107,8 +117,11 @@ void chassis::odometryTask() {
 
     chassis::move(leftSpeed, rightSpeed);
 
-    // auto pos = chassis::getPosition(true);
-    // printf("x: %f, y: %f, h: %f\n", pos.x, pos.y, pos.theta);
+    if (++i == 50) {
+      i = 0;
+      auto pos = chassis::getPosition(true);
+      printf("[debug] x: %f, y: %f, h: %f\n", pos.x, pos.y, pos.theta);
+    }
 
     sleep_ms(10);
   }
@@ -119,7 +132,7 @@ void chassis::setPose(const Position &newState) {
 
   state->x = newState.x;
   state->y = newState.y;
-  state->theta = newState.theta;
+  // state->theta = newState.theta;
 
   mutex_exit(odometryLock);
 }
@@ -173,12 +186,13 @@ void chassis::setPose(const Position &newState) {
 void chassis::initializeOdometry() {
   mutex_init(odometryLock);
 
-  for (int i = 0; i < 50; i++) {
+  for (int i = 0; i < 100; i++) {
     getHeading();
     sleep_ms(10);
   }
 
   resetValues.theta = getHeading() * M_PI / 180;
+  printf("[debug] reset theta: %f\n", resetValues.theta);
 }
 
 Position chassis::getPosition(bool degrees, bool standardPos) {

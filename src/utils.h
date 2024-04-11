@@ -13,7 +13,7 @@ double angleError(double angle1, double angle2, bool radians = false);
 /**
  * Returns the angle in the range [0, 2PI]
  */
-double angleSquish(double angle);
+double angleSquish(double angle, bool radians = true);
 
 /**
  * Converts degrees to radians

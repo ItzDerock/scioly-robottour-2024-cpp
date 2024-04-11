@@ -13,6 +13,8 @@ ExitCondition angularSmallExit(1, 100);
  * @brief Turns to a given angle
  */
 void chassis::turnTo(float degrees) {
+  degrees = utils::angleSquish(degrees - 90, false);
+
   // reset angular controllers/exit conditions
   angularPID.reset();
   angularLargeExit.reset();

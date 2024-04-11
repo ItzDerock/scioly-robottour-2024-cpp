@@ -1,26 +1,32 @@
-#include <cstdio>
 #include <stdio.h>
 
 #include <cmath>
+#include <cstdio>
 #include <variant>
 
 #include "BNO08x/Adafruit_BNO08x.h"
 #include "boards/pico.h"
 #include "chassis.h"
+#include "config.h"
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
+#include "imu.h"
+#include "path.h"
 #include "pico/binary_info.h"
 #include "pico/multicore.h"
 #include "pico/platform.h"
 #include "pico/stdlib.h"
+#include "pico/time.h"
 #include "quadrature_encoder.pio.h"
-
-#include "config.h"
-#include "imu.h"
-#include "path.h"
 
 L298N driveRight(6, 5, 4);
 L298N driveLeft(7, 8, 9);
+
+// 0 | 1 | 2 | 3
+#define START_QUAD 0
+#define TARGET_SECONDS 20
+
+const float FINISH_OFFSET = 16.f / 50;
 
 int main() {
   // picotool configuration
@@ -59,11 +65,16 @@ int main() {
 
   imu->enableReport(SH2_ARVR_STABILIZED_RV, 5'000);
 
-  chassis::initializeOdometry();
-  chassis::setPose({25, 0, 0});
-  multicore_launch_core1(chassis::odometryTask);
 
-  // wait to get first imu
+  // initialize odometry tracking and set initial position
+  chassis::initializeOdometry();
+
+  const Position START_POSITION = {50 * START_QUAD + 25, -16, 0};
+  chassis::setPose(START_POSITION);
+  printf("[info] Odometry initializing at (%f, %f, %f)\n", START_POSITION.x,
+         START_POSITION.y, START_POSITION.theta);
+
+  multicore_launch_core1(chassis::odometryTask);
 
   // beep once
   gpio_put(BEEPER_PIN, 1);
@@ -72,13 +83,14 @@ int main() {
 
   // gen points
   PathVector points = PathVector{Position{0, 0, 0}, Position{0, 1, 0},
-                                 Position{1, 1, 0}, Position{0, 1, 0}};
+                                 Position{1, 1, 0}, Position{0, 1, 0},
+                                 Position{0, 2, 0}, Position{0, 1, 0}};
 
-  // convert to centimeters
+  // convert to centimeter
   printf("[info] running pathgen...\n");
   toAbsoluteCoordinates(points);
 
-  printf("[debug] converted path:\n[debug]  <%f, %f> ",
+  printf("[debug] converted path:\n[debug]  <current %f, %f> ",
          chassis::getPosition().x, chassis::getPosition().y);
   for (Position segment : points) {
     printf("(%f, %f) -> ", segment.x, segment.y);
@@ -87,7 +99,7 @@ int main() {
 
   // interpolate all missing points
   std::vector<PathSegment> result;
-  interpolateAbsolutePath(points, result);
+  generatePath(points, result);
   printf("[info] pathgen done\n");
 
   // debug information
@@ -119,16 +131,38 @@ int main() {
   gpio_put(LIGHT_PIN, 0);
   sleep_ms(100);
 
+  // calculate end time
+  int endTime = to_ms_since_boot(get_absolute_time()) + TARGET_SECONDS * 1000;
+  printf("[debug] current time is %d, target time is %d\n", to_ms_since_boot(get_absolute_time()), endTime);
+
   // run path
-  for (PathSegment segment : result) {
+  // for (PathSegment segment : result) {
+  for (int i = 0; i < result.size(); i++) {
+    PathSegment segment = result.at(i);
+
     if (std::holds_alternative<float>(segment.data)) {
       float targetHeading = std::get<float>(segment.data);
       printf("turning to %d\n", targetHeading);
       chassis::turnTo(targetHeading);
     } else {
-      printf("Following path\n");
-      chassis::follow(std::get<PathVector>(segment.data), 7, 10'000, true,
-                      false);
+      // calculate remaining distance
+      float remainingDistance = 0;
+      
+      for (int y = i + 1; y < result.size(); y++) {
+        PathSegment remainingPart = result.at(y);
+
+        if (std::holds_alternative<PathVector>(remainingPart.data)) {
+          PathVector remainingPath = std::get<PathVector>(remainingPart.data);
+
+          for (int z = 0; z < remainingPath.size() - 1; z++) {
+            remainingDistance += remainingPath[z].distance(remainingPath[z + 1]);
+          }
+        }
+      }
+
+
+      printf("Following path, remaining distance: %f\n", remainingDistance);
+      chassis::follow(std::get<PathVector>(segment.data), 10, endTime, remainingDistance);
     }
   }
 

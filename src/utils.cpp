@@ -13,10 +13,12 @@ double utils::angleError(double angle1, double angle2, bool radians) {
 /**
  * Returns the angle in the range [0, 2PI]
  */
-double utils::angleSquish(double angle) {
+double utils::angleSquish(double angle, bool radians) {
+  float circle = radians ? (2.f * M_PI) : 360;
+
   while (angle < 0)
-    angle += 2 * M_PI;
-  return fmod(angle, 2 * M_PI);
+    angle += circle;
+  return fmod(angle, circle);
 }
 
 /**

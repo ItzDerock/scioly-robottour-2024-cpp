@@ -32,8 +32,7 @@ Position getPosition(bool degrees = false, bool standardPos = false);
 void move(int left, int right);
 void moveVelocity(int left, int right);
 
-void follow(std::vector<Position> &pathPoints, float lookahead, int timeout,
-            bool forwards, bool async);
+void follow(std::vector<Position> &pathPoints, float lookahead, int endTime, float remainingDistance);
 
 void turnTo(float angle);
 

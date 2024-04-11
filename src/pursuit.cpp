@@ -9,6 +9,7 @@
 
 // set DEBUG to true to enable debug logging
 #include "chassis.h"
+#include "pico/time.h"
 #include "utils.h"
 #include <memory>
 #define PURE_PURSUIT_DEBUG true
@@ -155,14 +156,8 @@ float findLookaheadCurvature(const Position &pose, float heading,
  * default
  */
 void chassis::follow(std::vector<Position> &pathPoints, float lookahead,
-                     int timeout, bool forwards, bool async) {
-  // if (async) {
-  //   pros::Task task(
-  //       [&]() { follow(pathPoints, lookahead, timeout, forwards, false); });
-  //   pros::delay(10);  // delay to give the task time to start
-  //   return;
-  // }
-
+                     int endTime, float remainingDistance) {
+  bool forwards = true;
   Position pose = chassis::getPosition();
   Position lastPose = pose;
   Position lookaheadPose(0, 0, 0);
@@ -179,13 +174,14 @@ void chassis::follow(std::vector<Position> &pathPoints, float lookahead,
   // distTravelled = 0;
 
   // loop until the robot is within the end tolerance
-  for (int i = 0; i < timeout / 10; i++) {
+  for (int i = 0; i < endTime / 10; i++) {
     // get the current position of the robot
     pose = getPosition();
     if (!forwards)
       pose.theta -= M_PI;
-  
-    // printf("pose: %f, %f, %f\n", pose.x, pose.y, utils::radToDeg(pose.theta));
+
+    // printf("pose: %f, %f, %f\n", pose.x, pose.y,
+    // utils::radToDeg(pose.theta));
 
     // update completion vars
     // distTravelled += pose.distance(lastPose);
@@ -206,14 +202,31 @@ void chassis::follow(std::vector<Position> &pathPoints, float lookahead,
     float curvatureHeading = M_PI_2 - pose.theta;
     curvature = findLookaheadCurvature(pose, curvatureHeading, lookaheadPose);
 
-    // get the target velocity of the robot
-    targetVel = pathPoints.at(closestPoint).theta;
-    targetVel = utils::slew(targetVel, prevVel, 1);
+    // find target velocity
+    float distanceTillEnd = pose.distance(pathPoints.at(closestPoint)) + remainingDistance;
+    for (int i = closestPoint; i < pathPoints.size() - 1; i++) {
+      distanceTillEnd += pathPoints.at(i).distance(pathPoints.at(i + 1)); 
+    }
+    
+    float timeTillEnd = endTime - to_ms_since_boot(get_absolute_time()); // milliseconds
+    timeTillEnd /= 1000; // seconds
+    timeTillEnd /= 60; // minutes
+   
+    targetVel = (distanceTillEnd / (6.5f * M_PI)) / timeTillEnd; // rpm 
+    
+
+    // if < 0, max speed time
+    if (timeTillEnd < 0) targetVel = 300; 
+    targetVel = utils::slew(targetVel, prevVel, 4);
+ 
+    // prevent stalling
+    if (targetVel < 10) targetVel = 10;
+
     prevVel = targetVel;
 
     // calculate target left and right velocities
-    float targetLeftVel = targetVel * (1 + curvature * DRIVE_TRACK_WIDTH) / 2;
-    float targetRightVel = targetVel * (1 - curvature * DRIVE_TRACK_WIDTH) / 2;
+    float targetLeftVel = targetVel * (2 + curvature * DRIVE_TRACK_WIDTH) / 2;
+    float targetRightVel = targetVel * (2 - curvature * DRIVE_TRACK_WIDTH) / 2;
 
     // ratio the speeds to respect the max speed
     float ratio =
