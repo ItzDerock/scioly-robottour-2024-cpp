@@ -3,3 +3,4 @@ CompileFlags:
   Add:
     # "--query-driver=**/*g++*"
     "-stdlib=libc++"
+    "-std=gnu++11"

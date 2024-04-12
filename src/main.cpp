@@ -22,11 +22,15 @@
 L298N driveRight(6, 5, 4);
 L298N driveLeft(7, 8, 9);
 
+const float FINISH_OFFSET = 16.f / 50;
+
+PathVector points = PathVector{
+    {0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 2, 0},
+    {1, 2, 0}, {1, 3, 0}, {3, 3, 0}, {3, 2, 0}, {2 + FINISH_OFFSET, 2, 0}};
+
 // 0 | 1 | 2 | 3
 #define START_QUAD 0
-#define TARGET_SECONDS 20
-
-const float FINISH_OFFSET = 16.f / 50;
+#define TARGET_SECONDS 48
 
 int main() {
   // picotool configuration
@@ -65,11 +69,10 @@ int main() {
 
   imu->enableReport(SH2_ARVR_STABILIZED_RV, 5'000);
 
-
   // initialize odometry tracking and set initial position
   chassis::initializeOdometry();
 
-  const Position START_POSITION = {50 * START_QUAD + 25, -16, 0};
+  const Position START_POSITION = {50 * START_QUAD + 25, -14, 0};
   chassis::setPose(START_POSITION);
   printf("[info] Odometry initializing at (%f, %f, %f)\n", START_POSITION.x,
          START_POSITION.y, START_POSITION.theta);
@@ -82,9 +85,6 @@ int main() {
   gpio_put(BEEPER_PIN, 0);
 
   // gen points
-  PathVector points = PathVector{Position{0, 0, 0}, Position{0, 1, 0},
-                                 Position{1, 1, 0}, Position{0, 1, 0},
-                                 Position{0, 2, 0}, Position{0, 1, 0}};
 
   // convert to centimeter
   printf("[info] running pathgen...\n");
@@ -132,8 +132,10 @@ int main() {
   sleep_ms(100);
 
   // calculate end time
-  int endTime = to_ms_since_boot(get_absolute_time()) + TARGET_SECONDS * 1000;
-  printf("[debug] current time is %d, target time is %d\n", to_ms_since_boot(get_absolute_time()), endTime);
+  int endTime = to_ms_since_boot(get_absolute_time()) + TARGET_SECONDS * 1000 +
+                500; // over is better than under
+  printf("[debug] current time is %d, target time is %d\n",
+         to_ms_since_boot(get_absolute_time()), endTime);
 
   // run path
   // for (PathSegment segment : result) {
@@ -147,7 +149,7 @@ int main() {
     } else {
       // calculate remaining distance
       float remainingDistance = 0;
-      
+
       for (int y = i + 1; y < result.size(); y++) {
         PathSegment remainingPart = result.at(y);
 
@@ -155,14 +157,15 @@ int main() {
           PathVector remainingPath = std::get<PathVector>(remainingPart.data);
 
           for (int z = 0; z < remainingPath.size() - 1; z++) {
-            remainingDistance += remainingPath[z].distance(remainingPath[z + 1]);
+            remainingDistance +=
+                remainingPath[z].distance(remainingPath[z + 1]);
           }
         }
       }
 
-
       printf("Following path, remaining distance: %f\n", remainingDistance);
-      chassis::follow(std::get<PathVector>(segment.data), 10, endTime, remainingDistance);
+      chassis::follow(std::get<PathVector>(segment.data), 10, endTime,
+                      remainingDistance);
     }
   }
 
