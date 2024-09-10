@@ -2,7 +2,7 @@
 
 C++ code for the Science Olympiad Robot Tour Divison C event. Targeted at the RP2040 microcontroller using the pico-sdk library.
 
-## Read the [blog post](https://derock.blog/post/science-olympiad-robot-tour?ref=github) to learn more about the hardware and software.
+## Read the [blog post](https://derock.blog/post/science-olympiad-robot-tour?ref=github) to learn more about the hardware and software. Or check out this [demo video](https://youtu.be/HW2_rhXF9W8)
 <a href="https://derock.blog/post/science-olympiad-robot-tour?ref=github">
   <img src="https://derock.blog/thumbs/scioly-robot-tour-2024.webp" alt="thumbnail" />
 </a>
