@@ -73,23 +73,13 @@ void chassis::doOdometryTick() {
   velocity->left = dL / 0.01f;
   velocity->right = dR / 0.01f;
 
-  // 4. total change since last reset
-  // auto deltaLr = left - resetValues.left;
-  // auto deltaRr = right - resetValues.right;
-
   // 5. Calculate new orientation
   double newTheta = getHeading() * M_PI / 180.0f;
   newTheta -= resetValues.theta;
-  // printf("[debug] real: %f, reset theta: %f\n", getHeading() * M_PI / 180.0f,
-  // resetValues.theta); printf("[debug] so now: %f\n", newTheta);
 
   // flip
   newTheta = 2.0f * M_PI - newTheta;
-  // printf("raw: %f, reset thetha: %f\n", getHeading(), resetValues.theta * 180
-  // / M_PI);
   newTheta = utils::angleSquish(newTheta, true);
-  // if (newTheta < 2 * M_PI)
-  //   newTheta += 2 * M_PI;
 
   // 6. Calculate change in orientation
   double dTheta = newTheta - state->theta;
@@ -127,61 +117,21 @@ void chassis::odometryTask() {
   }
 }
 
-void chassis::setPose(const Position &newState) {
+void chassis::setPose(const Position &newState, bool setTheta) {
   mutex_enter_blocking(odometryLock);
 
   state->x = newState.x;
   state->y = newState.y;
-  // state->theta = newState.theta;
+
+  if (setTheta) {
+    resetValues.theta = getHeading() * M_PI / 180;
+  }
+
+  printf("[odom] Position reset to (%f, %f, %f)", state->x, state->y,
+         state->theta * 180 / M_PI);
 
   mutex_exit(odometryLock);
 }
-
-// void odom::reset(odom::RobotPosition startState) {
-//   // aquire mutex
-//   mutex.take();
-
-//   // stop task
-//   bool taskRunning = odomTask != nullptr;
-//   if (taskRunning) {
-//     odomTask->remove();
-//     odomTask = nullptr;
-//   }
-
-//   // reset encoders
-//   for (auto motor : drive_left) {
-//     CHECK_SUCCESS(motor->set_zero_position(0), "drive_left");
-//   }
-
-//   for (auto motor : drive_right) {
-//     CHECK_SUCCESS(motor->set_zero_position(0), "drive_right");
-//   }
-
-//   CHECK_SUCCESS(odom_middle.sensor->reset(), "odom_middle");
-//   CHECK_SUCCESS(inertial->reset(true), "odom_imu");
-
-//   // reset state
-//   // state = startState;
-//   state->x = startState.x;
-//   state->y = startState.y;
-//   state->theta = startState.theta;
-//   resetValues.theta = startState.theta;
-
-//   // reset prevSensors
-//   prevSensors = {0, 0, 0, 0};
-
-//   // delay 10ms to let the sensors reset
-//   pros::delay(10);
-
-//   // restart task
-//   if (taskRunning)
-//     initalize();
-
-//   // release mutex
-//   mutex.give();
-// }
-
-// void odom::reset() { reset({0, 0, 0}); }
 
 void chassis::initializeOdometry() {
   mutex_init(odometryLock);

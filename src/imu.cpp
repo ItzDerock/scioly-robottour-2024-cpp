@@ -1,12 +1,16 @@
+#include <atomic>
 #include <cmath>
 #include <cstdio>
 
 #include "Adafruit_BNO08x.h"
 #include "config.h"
 #include "imu.h"
+#include "sh2.h"
 
 euler_t *ypr = new euler_t;
 Adafruit_BNO08x *imu = new Adafruit_BNO08x(15);
+std::atomic<CalibrationStatus> calibration_status =
+    CALIBRATION_STATUS_UNCALIBRATED;
 
 void quaternionToEuler(float qr, float qi, float qj, float qk, euler_t *ypr,
                        bool degrees) {
@@ -38,17 +42,40 @@ void quaternionToEulerGI(sh2_GyroIntegratedRV_t *rotational_vector,
                     rotational_vector->j, rotational_vector->k, ypr, degrees);
 }
 
-float getHeading() {
-  if (imu->wasReset()) {
-    printf("was reset\n");
-    imu->enableReport(SH2_ARVR_STABILIZED_RV, 5'000);
+/**
+ * Macro for checking the success of an operation. If the operation fails, the
+ * function will log the error.
+ */
+#define CHECK_SUCCESS(operation)                                               \
+  if (!operation) {                                                            \
+    printf("[error] failed to " #operation "\n");                              \
+    return;                                                                    \
   }
 
+/**
+ * To be called upon IMU reset. This function re-enables the required reports.
+ */
+void enableReports() {
+  printf("[imu] Enabling reports.");
+  CHECK_SUCCESS(imu->enableReport(SH2_ARVR_STABILIZED_RV, 5'000));
+  CHECK_SUCCESS(imu->enableReport(SH2_MAGNETIC_FIELD_CALIBRATED));
+  CHECK_SUCCESS(imu->enableReport(SH2_MAGNETIC_FIELD_UNCALIBRATED));
+}
+
+float getHeading() {
+  // Re-enable reports if the IMU was reset
+  if (imu->wasReset()) {
+    enableReports();
+  }
+
+  // read the sensor event
   sh2_SensorValue_t event;
   if (!imu->getSensorEvent(&event)) {
     printf("no event\n");
     return ypr->yaw;
   };
+
+  calibration_status.store((CalibrationStatus)event.status);
 
   switch (event.sensorId) {
   case SH2_ARVR_STABILIZED_RV:
@@ -57,7 +84,11 @@ float getHeading() {
     // faster (more noise?)
     quaternionToEulerGI(&event.un.gyroIntegratedRV, ypr, true);
     break;
+  default:
+    break;
   }
 
   return ypr->yaw;
 }
+
+CalibrationStatus getCalibrationStatus() { return calibration_status.load(); }

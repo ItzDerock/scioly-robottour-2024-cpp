@@ -26,6 +26,9 @@ PathVector points = PathVector{
 #define START_QUAD 0
 #define TARGET_SECONDS 48
 
+// declared in button.cpp
+int waitForMainButton(uint button_pin, uint led_pin);
+
 int main() {
   // picotool configuration
   bi_decl(bi_program_description(
@@ -112,17 +115,11 @@ int main() {
   }
 
   // led and wait for start
-  while (true) {
-    gpio_put(LIGHT_PIN, 1);
-    sleep_ms(50);
-    gpio_put(LIGHT_PIN, 0);
+  int clicks = waitForMainButton(START_BUTTON_PIN, LIGHT_PIN);
+  printf("[info] button clicked %d times\n", clicks);
 
-    if (!gpio_get(START_BUTTON_PIN)) // pulled up
-      break;
-
-    sleep_ms(50);
-  }
   gpio_put(LIGHT_PIN, 0);
+  chassis::setPose(START_POSITION, true);
   sleep_ms(100);
 
   // calculate end time

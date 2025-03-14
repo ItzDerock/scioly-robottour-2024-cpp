@@ -6,6 +6,15 @@
 #define RAD_TO_DEG 57.295779513082320876798154814105
 #endif
 
+enum CalibrationStatus {
+  CALIBRATION_STATUS_UNCALIBRATED = 0,
+  CALIBRATION_STATUS_LOW_ACCURACY = 1,
+  CALIBRATION_STATUS_MEDIUM_ACCURACY = 2,
+  CALIBRATION_STATUS_HIGH_ACCURACY = 3,
+};
+
+CalibrationStatus getCalibrationStatus();
+
 struct euler_t {
   float yaw;
   float pitch;

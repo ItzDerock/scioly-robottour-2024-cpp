@@ -1,3 +1,5 @@
+Modified to work with the pico-sdk
+
 # SH2 Sensorhub driver for MCU application (No RTOS version)
 
 The files in this repository provide application-level SH2 sensor hub functionality.

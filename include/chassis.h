@@ -36,6 +36,6 @@ void follow(std::vector<Position> &pathPoints, float lookahead, int endTime,
 
 void turnTo(float angle);
 
-void setPose(const Position &newState);
+void setPose(const Position &newState, bool setTheta = false);
 
 } // namespace chassis
