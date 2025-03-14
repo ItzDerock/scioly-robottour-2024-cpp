@@ -1,21 +1,15 @@
 #include <stdio.h>
-
-#include <cmath>
-#include <cstdio>
 #include <variant>
 
 #include "Adafruit_BNO08x.h"
-#include "boards/pico.h"
 #include "chassis.h"
 #include "config.h"
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
-#include "imu.h"
 #include "path.h"
-#include "pico/binary_info.h"
+#include "pico/binary_info/code.h"
 #include "pico/multicore.h"
-#include "pico/platform.h"
-#include "pico/stdlib.h"
+#include "pico/stdio.h"
 #include "pico/time.h"
 #include "quadrature_encoder.pio.h"
 

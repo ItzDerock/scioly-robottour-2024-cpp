@@ -1,6 +1,31 @@
 CompileFlags:
   CompilationDatabase: "build"
-  Add:
-    # "--query-driver=**/*g++*"
-    "-stdlib=libc++"
-    "-std=gnu++11"
+    Add:
+      # Explicitly specify ARM target
+      - --target=arm-none-eabi
+      - -std=gnu++11
+      # Add more specific C++ configuration for ARM
+      - -I/nix/store/qxp7ar0xmgrh5wavl18yjklrpk6img2d-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include
+      - -I/nix/store/qxp7ar0xmgrh5wavl18yjklrpk6img2d-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/c++/12.3.1
+      - -I/nix/store/qxp7ar0xmgrh5wavl18yjklrpk6img2d-gcc-arm-embedded-12.3.rel1/arm-none-eabi/include/c++/12.3.1/arm-none-eabi
+      - -I/nix/store/qxp7ar0xmgrh5wavl18yjklrpk6img2d-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include
+      - -I/nix/store/qxp7ar0xmgrh5wavl18yjklrpk6img2d-gcc-arm-embedded-12.3.rel1/lib/gcc/arm-none-eabi/12.3.1/include-fixed
+      # Pico SDK includes
+      - -I/nix/store/q6wb1s4srkgys8llk0ra9nqqg0ag3wyy-pico-sdk-1.5.1/lib/pico-sdk/src/common/pico_stdlib/include
+      - -I/nix/store/q6wb1s4srkgys8llk0ra9nqqg0ag3wyy-pico-sdk-1.5.1/lib/pico-sdk/src/common/pico_base/include
+      - -I/nix/store/q6wb1s4srkgys8llk0ra9nqqg0ag3wyy-pico-sdk-1.5.1/lib/pico-sdk/src/common/pico_binary_info/include
+      - -I/nix/store/q6wb1s4srkgys8llk0ra9nqqg0ag3wyy-pico-sdk-1.5.1/lib/pico-sdk/src/rp2_common/pico_platform/include
+      # ARM architecture flags
+      - -mcpu=cortex-m0plus
+      - -mthumb
+      # Embedded system flags
+      - -ffreestanding
+      - -nostdlib
+      # Tell clangd we're doing bare metal development
+      - -DPICO_ON_DEVICE=1
+      - -D__PICOLIBC__
+      # Additional flags to help clangd understand the environment
+      - -fno-exceptions
+      - -fno-rtti
+      # Necessary definitions that would be in the Pico SDK
+      - -D__unused=__attribute__((unused))

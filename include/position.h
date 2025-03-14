@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cmath>
+#include <math.h>
 
 struct Position {
   double x;
@@ -16,9 +16,7 @@ struct Position {
            (checkTheta ? this->theta == other.theta : true);
   }
 
-  bool operator==(const Position &other) const {
-    return equals(other); 
-  }
+  bool operator==(const Position &other) const { return equals(other); }
 
   // subtract operator
   Position operator-(const Position &other) const {

@@ -1,3 +1,4 @@
+
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
@@ -22,26 +23,25 @@
           };
         }));
 
-      fhs = pkgs.buildFHSUserEnv {
-        name = "fhs-shell";
-        targetPkgs = pkgs: with pkgs; [
+    in
+    {
+      devShells.x86_64-linux.default = pkgs.mkShell {
+        packages = with pkgs; [
           cmake
           gcc-arm-embedded
           pico-sdk-sub
           python3
           glibc_multi # headers
-          minicom # serial 
+          minicom # serial
           openocd-rp2040 # picotool
           clang-tools # lsp
+          openssl.dev
         ];
 
-        runScript = "bash";
-        profile = ''
-          export PICO_SDK_PATH="${pico-sdk-sub}/lib/pico-sdk"
-        '';
+        env = {
+          PICO_SDK_PATH = "${pico-sdk-sub}/lib/pico-sdk";
+          GCC_ARM_EMBEDDED_PATH = pkgs.gcc-arm-embedded;
+        };
       };
-    in
-    {
-      devShells.x86_64-linux.default = fhs.env;
     };
 }
