@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BNO08x/Adafruit_BNO08x.h"
+#include "Adafruit_BNO08x.h"
 
 #ifndef RAD_TO_DEG
 #define RAD_TO_DEG 57.295779513082320876798154814105

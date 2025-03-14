@@ -1,6 +1,6 @@
 #pragma once
 
-#include "components/Motor.h"
+#include "Motor.h"
 #include "position.h"
 #include <memory>
 #include <vector>
@@ -32,7 +32,8 @@ Position getPosition(bool degrees = false, bool standardPos = false);
 void move(int left, int right);
 void moveVelocity(int left, int right);
 
-void follow(std::vector<Position> &pathPoints, float lookahead, int endTime, float remainingDistance);
+void follow(std::vector<Position> &pathPoints, float lookahead, int endTime,
+            float remainingDistance);
 
 void turnTo(float angle);
 

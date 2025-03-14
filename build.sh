@@ -6,7 +6,7 @@ set -e # exit on errors
 
 cmake -S . -B build
 cd build
-make -j$(cat /proc/cpuinfo | grep processor | wc -l)
+make -j$NUM_CPUS
 
 
 case "$1" in

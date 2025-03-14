@@ -1,5 +1,5 @@
+#include "Motor.h"
 #include "chassis.h"
-#include "components/Motor.h"
 #include "config.h"
 #include "imu.h"
 #include "utils.h"
@@ -80,8 +80,8 @@ void chassis::doOdometryTick() {
   // 5. Calculate new orientation
   double newTheta = getHeading() * M_PI / 180.0f;
   newTheta -= resetValues.theta;
-  // printf("[debug] real: %f, reset theta: %f\n", getHeading() * M_PI / 180.0f, resetValues.theta);
-  // printf("[debug] so now: %f\n", newTheta);
+  // printf("[debug] real: %f, reset theta: %f\n", getHeading() * M_PI / 180.0f,
+  // resetValues.theta); printf("[debug] so now: %f\n", newTheta);
 
   // flip
   newTheta = 2.0f * M_PI - newTheta;

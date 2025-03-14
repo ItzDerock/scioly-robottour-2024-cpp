@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <variant>
 
-#include "BNO08x/Adafruit_BNO08x.h"
+#include "Adafruit_BNO08x.h"
 #include "boards/pico.h"
 #include "chassis.h"
 #include "config.h"

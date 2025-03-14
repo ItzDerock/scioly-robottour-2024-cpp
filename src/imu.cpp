@@ -1,7 +1,7 @@
 #include <cmath>
 #include <cstdio>
 
-#include "BNO08x/Adafruit_BNO08x.h"
+#include "Adafruit_BNO08x.h"
 #include "config.h"
 #include "imu.h"
 

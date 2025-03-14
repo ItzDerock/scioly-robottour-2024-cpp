@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BNO08x/Adafruit_BNO08x.h"
+#include "Adafruit_BNO08x.h"
 #include "l298n.h"
 
 #define START_BUTTON_PIN 3
