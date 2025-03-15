@@ -107,7 +107,7 @@ void chassis::odometryTask() {
 
     chassis::move(leftSpeed, rightSpeed);
 
-    if (++i == 50) {
+    if (++i == 10) {
       i = 0;
       auto pos = chassis::getPosition(true);
       printf("[debug] x: %f, y: %f, h: %f\n", pos.x, pos.y, pos.theta);

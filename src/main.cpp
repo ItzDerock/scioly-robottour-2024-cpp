@@ -18,13 +18,16 @@ L298N driveLeft(7, 8, 9);
 
 const float FINISH_OFFSET = 16.f / 50;
 
+// PathVector points = PathVector{
+//     {0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 2, 0},
+//     {1, 2, 0}, {1, 3, 0}, {3, 3, 0}, {3, 2, 0}, {2 + FINISH_OFFSET, 2, 0}};
 PathVector points = PathVector{
-    {0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 2, 0},
-    {1, 2, 0}, {1, 3, 0}, {3, 3, 0}, {3, 2, 0}, {2 + FINISH_OFFSET, 2, 0}};
+    {2, 0, 0}, {3, 1, 0}, {3, 3, 0}, {3, 0, 0}, {2, 1, 0},
+    {1, 2, 0}, {0, 3, 0}, {0, 2, 0}, {1, 1, 0}, {2 + FINISH_OFFSET, 2, 0}};
 
 // 0 | 1 | 2 | 3
-#define START_QUAD 0
-#define TARGET_SECONDS 48
+#define START_QUAD 2
+#define TARGET_SECONDS 40
 
 // declared in button.cpp
 int waitForMainButton(uint button_pin, uint led_pin);
@@ -63,8 +66,6 @@ int main() {
   while (!imu->begin_I2C(BNO08x_I2CADDR_DEFAULT, i2c0, 16, 17)) {
     sleep_ms(100);
   };
-
-  imu->enableReport(SH2_ARVR_STABILIZED_RV, 5'000);
 
   // initialize odometry tracking and set initial position
   chassis::initializeOdometry();
@@ -160,7 +161,11 @@ int main() {
     }
   }
 
-  // main loop
+  // once finished, pull both motors low
+  driveLeft.stop();
+  driveRight.stop();
+
+  // done!
   while (true) {
     gpio_put(LIGHT_PIN, 1);
     sleep_ms(1'000);

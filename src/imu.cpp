@@ -56,11 +56,14 @@ void quaternionToEulerGI(sh2_GyroIntegratedRV_t *rotational_vector,
  * To be called upon IMU reset. This function re-enables the required reports.
  */
 void enableReports() {
-  printf("[imu] Enabling reports.");
-  CHECK_SUCCESS(imu->enableReport(SH2_ARVR_STABILIZED_RV, 5'000));
-  CHECK_SUCCESS(imu->enableReport(SH2_MAGNETIC_FIELD_CALIBRATED));
-  CHECK_SUCCESS(imu->enableReport(SH2_MAGNETIC_FIELD_UNCALIBRATED));
+  printf("[imu] Enabling reports.\n");
+  CHECK_SUCCESS(imu->enableReport(SH2_ROTATION_VECTOR, 5'000));
+  // CHECK_SUCCESS(imu->enableReport(SH2_MAGNETIC_FIELD_CALIBRATED));
+  // CHECK_SUCCESS(imu->enableReport(SH2_MAGNETIC_FIELD_UNCALIBRATED));
 }
+
+// prevent realloc of this
+sh2_SensorValue_t event;
 
 float getHeading() {
   // Re-enable reports if the IMU was reset
@@ -69,20 +72,16 @@ float getHeading() {
   }
 
   // read the sensor event
-  sh2_SensorValue_t event;
   if (!imu->getSensorEvent(&event)) {
-    printf("no event\n");
+    printf("[warn] getHeading() called, but no event waiting!\n");
     return ypr->yaw;
   };
 
   calibration_status.store((CalibrationStatus)event.status);
 
   switch (event.sensorId) {
-  case SH2_ARVR_STABILIZED_RV:
-    quaternionToEulerRV(&event.un.arvrStabilizedRV, ypr, true);
-  case SH2_GYRO_INTEGRATED_RV:
-    // faster (more noise?)
-    quaternionToEulerGI(&event.un.gyroIntegratedRV, ypr, true);
+  case SH2_ROTATION_VECTOR:
+    quaternionToEulerRV(&event.un.rotationVector, ypr, true);
     break;
   default:
     break;
