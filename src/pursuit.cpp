@@ -28,7 +28,7 @@
  * @param path the path to follow
  * @return int index to the closest point
  */
-int findClosest(Position pose, std::vector<Position> &path) {
+int findClosest(Position pose, std::vector<Position> &path, int prevIdx) {
   int closestPoint;
   float closestDist = 1000000;
   float dist;
@@ -188,7 +188,7 @@ void chassis::follow(std::vector<Position> &pathPoints, float lookahead,
     // lastPose = pose;
 
     // find the closest point on the path to the robot
-    closestPoint = findClosest(pose, pathPoints);
+    closestPoint = findClosest(pose, pathPoints, closestPoint);
     // if the robot is at the end of the path, then stop
     if (pathPoints.at(closestPoint).theta == 0)
       break;

@@ -1,5 +1,6 @@
 #include "path.h"
 
+#include <set>
 #include <stdio.h>
 
 #include <optional>
